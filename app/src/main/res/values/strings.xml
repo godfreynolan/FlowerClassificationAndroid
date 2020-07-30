@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Flower Classifier</string>
+    <string name="uploadedContentDescription">Uploaded image from gallery.</string>
+    <string name="clickClassify">Click to Classify</string>
+
+    <string name="unknown">Unknown Flower</string>
+</resources>
