@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single"
+        android:id="@+id/topNav">
+        <item
+            android:id="@+id/nav_sample"
+            android:icon="@drawable/ic_baseline_photo_24"
+            android:title="@string/nav_sample"
+            android:checked="true"/>
+        <item
+            android:id="@+id/nav_upload"
+            android:icon="@drawable/ic_baseline_add_photo_alternate_24"
+            android:title="@string/nav_upload" />
+
+        <item
+            android:id="@+id/nav_list"
+            android:icon="@drawable/ic_baseline_list_alt_24"
+            android:title="@string/nav_list"
+            />
+
+        <item
+            android:id="@+id/nav_about"
+            android:icon="@drawable/ic_baseline_info_24"
+            android:title="@string/nav_about" />
+
+    </group>
+</menu>

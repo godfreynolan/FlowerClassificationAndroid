@@ -6,4 +6,8 @@
 
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
+
+    <color name="nav_center">#009688</color>
+    <color name="nav_start">#4db6ac</color>
+    <color name="nav_end">#00695c</color>
 </resources>

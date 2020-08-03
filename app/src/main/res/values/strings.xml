@@ -4,4 +4,21 @@
     <string name="clickClassify">Click to Classify</string>
 
     <string name="unknown">Unknown Flower</string>
+    <string name="model_name">flower_model.tflite</string>
+    <string name="label_name">CapitalLabels.txt</string>
+    <string name="sample_image_type">.*.jpg</string>
+
+    <string name="nav_sample">Sample Images</string>
+    <string name="nav_upload">Upload an Image</string>
+    <string name="nav_list">Flower Label List</string>
+    <string name="nav_about">About</string>
+
+    <string name="open_nav_drawer">Open Navigation Drawer</string>
+    <string name="close_nav_drawer">Close Navigation Drawer</string>
+    <string name="nav_menu_header">Menu</string>
+
+    <string name="upload_add_image">Click the \"+\" to upload an image</string>
+
+    <string name="about_DataSet">&lt;a href="https://www.robots.ox.ac.uk/~vgg/data/flowers/102/">Oxford Flower Dataset&lt;/a></string>
+    <string name="about_GitHub">&lt;a href="https://github.com/riis/FlowerClassificationAndroid">Food Classifier Github&lt;/a></string>
 </resources>
