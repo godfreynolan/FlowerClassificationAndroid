@@ -16,8 +16,8 @@ class ImageItemAdapter(val imageItems: List<ImageItem>, val classifier: Classifi
 
 
     inner class ViewHolder(imageItemView: View) : RecyclerView.ViewHolder(imageItemView), View.OnClickListener {
-        internal val sampleNameView = itemView.findViewById<TextView>(R.id.sampleName)
-        internal val sampleImageView = itemView.findViewById<ImageView>(R.id.sampleImage)
+        val sampleNameView = itemView.findViewById<TextView>(R.id.sampleName)
+        val sampleImageView = itemView.findViewById<ImageView>(R.id.sampleImage)
         init{
             itemView.setOnClickListener(this)
         }

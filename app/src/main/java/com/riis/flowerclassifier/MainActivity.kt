@@ -1,149 +1,162 @@
 package com.riis.flowerclassifier
 
-import android.app.Activity
-import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.text.Layout
-import android.util.Log
-import android.view.View
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.view.MenuItem
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.riis.flowerclassifier.adapter.ImageItemAdapter
-import com.riis.flowerclassifier.model.ImageItem
-import com.riis.flowerclassifier.tflite.Classifier
-import com.riis.flowerclassifier.R
-import java.io.InputStream
+import androidx.core.view.GravityCompat
+import androidx.fragment.app.Fragment
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.navigation.NavigationView
+import com.riis.flowerclassifier.fragments.FragmentList
+import com.riis.flowerclassifier.fragments.FragmentSample
+import com.riis.flowerclassifier.fragments.FragmentUpload
+import com.riis.flowerclassifier.fragments.FragmentAbout
+import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity() {
-    val REQUEST_CODE = 100
-    val INPUT_SIZE = 224
-
+class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val classifier: Classifier =
-            Classifier(
-                assets,
-                "flower_model.tflite",
-                "labels.txt",
-                224
-            )
-        val imageListView: RecyclerView = findViewById(R.id.image_list_view)
-        var items = getImageItems()
-
-        val adapter: ImageItemAdapter =
-            ImageItemAdapter(items, classifier)
-
-        val staggeredGridLayoutManager = GridLayoutManager(
-            applicationContext,
-            2,
-            GridLayoutManager.VERTICAL,
-            false
-        )
-
-        val fab = findViewById<FloatingActionButton>(R.id.fab)
-
-        fab.setOnClickListener{
-            openGallery()
+        // Checks to see what the current fragment is
+        // If the app has just started, then the sample images fragment will be shown
+        if(getCurrentFragment() == null){
+            supportFragmentManager.beginTransaction().replace(R.id.fragment_container, FragmentSample(), FragmentTags.Sample.tag).commit()
         }
 
-        imageListView.layoutManager = staggeredGridLayoutManager
-        imageListView.adapter = adapter
+        // Creates the backStackChangedListener
+        // Used to update the highlighted items in the navigation drawer
+        loadBackStackChangedListener()
+
+        //Gets the topAppBar and creates a toggle to open and close the drawer
+        val topAppBar = findViewById<MaterialToolbar>(R.id.topAppBar)
+        val toggle = ActionBarDrawerToggle(this, drawer_layout, topAppBar, R.string.open_nav_drawer, R.string.close_nav_drawer)
+
+        //adds the toggle listener
+        drawer_layout.addDrawerListener(toggle)
+        toggle.syncState()
+        nav_view.setNavigationItemSelectedListener(this)
     }
 
-    fun getImageItems(): MutableList<ImageItem>{
-        val items = mutableListOf<ImageItem>()
-        val fileNames = assets.list("images")
-        if (fileNames != null) {
-            for (name in fileNames){
-                if(name.matches(""".*.jpg""".toRegex())){
-                    val stream: InputStream = assets.open("images/$name")
-                    val image: Bitmap = BitmapFactory.decodeStream(stream)
-                    val item: ImageItem =
-                        ImageItem(image)
-                    items.add(item)
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            // If the tab selected is the sample images
+            // Each tab also checks if the tab is already selected before loading the fragment
+            // This makes sure the same fragment doesn't get loaded multiple times
+            R.id.nav_sample -> {
+                if(!nav_view.menu.getItem(0).isChecked) {
+                    loadFragment(FragmentTags.Sample)
+                }
+            }
+            // If the tab selected is the upload an image
+            R.id.nav_upload -> {
+                if(!nav_view.menu.getItem(1).isChecked) {
+                    loadFragment(FragmentTags.Upload)
+                }
+            }
+            // If the tab selected is the dog name list view
+            R.id.nav_list -> {
+                if(!nav_view.menu.getItem(2).isChecked) {
+                    loadFragment(FragmentTags.List)
+                }
+            }
+            // If the tab selected is the about tab
+            R.id.nav_about -> {
+                if(!nav_view.menu.getItem(3).isChecked) {
+                    loadFragment(FragmentTags.About)
                 }
             }
         }
-        return items
+        //Closes the drawer after a tab is clicked
+        drawer_layout.closeDrawer(GravityCompat.START)
+        return true
     }
 
-    fun openGallery(){
-        val intent = Intent(Intent.ACTION_PICK)
-        intent.type = "image/*"
-        startActivityForResult(intent, REQUEST_CODE)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        //If the image was selected successfully
-        if(requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK){
-            val uri = data?.data
-
-            val imageView = findViewById<ImageView>(R.id.uploadedImage)
-            imageView.setImageURI(data?.data)
-
-            val uploadItem = findViewById<View>(R.id.includeUpload)
-            uploadItem.visibility = View.VISIBLE
-
-            //creates an input stream from the selected image's URI
-            val inputStream: InputStream? = contentResolver.openInputStream(uri!!)
-            //creates a bitmap of the image
-            val image: Bitmap = BitmapFactory.decodeStream(inputStream)
-            val scaledBitmap = resizeToCenter(image, 224)
-            Log.i("ImageDimens", "width: ${scaledBitmap.width} height: ${scaledBitmap.height}")
-            imageView.setImageBitmap(scaledBitmap)
-            val item = ImageItem(scaledBitmap!!)
-            startClassifier(item)
-
+    private fun loadBackStackChangedListener(){
+        // Used when the back button is clicked to change the highlighted
+        // item in the navigation drawer
+        supportFragmentManager.addOnBackStackChangedListener {
+            // Whem the back button is pressed, then the current fragment is obtained
+            val currentFrag = getCurrentFragment()
+            //checks if the fragment is null
+            if (currentFrag != null) {
+                //checks which fragment is loaded and highlights that item in the menu
+                when(currentFrag.tag) {
+                    FragmentTags.Sample.tag -> {
+                        nav_view.menu.getItem(0).isChecked = true
+                    }
+                    FragmentTags.Upload.tag -> {
+                        nav_view.menu.getItem(1).isChecked = true
+                    }
+                    FragmentTags.List.tag -> {
+                        nav_view.menu.getItem(2).isChecked = true
+                    }
+                    FragmentTags.About.tag-> {
+                        nav_view.menu.getItem(3).isChecked = true
+                    }
+                    else -> {
+                        nav_view.menu.getItem(0).isChecked = true
+                    }
+                }
+            }else{
+                nav_view.menu.getItem(0).isChecked = true
+            }
         }
     }
 
-    private fun startClassifier(item: ImageItem){
-        val textView = findViewById<TextView>(R.id.uploadedTextView)
-        //loads the tflite and label files
-        val classifier = Classifier(assets, "flower_model.tflite", "labels.txt", 224)
-        val recognition = classifier.recognizeImage(item.image)
-        //displays the dog title and confidence
-        if(recognition.isNotEmpty()){
-            item.confidence = recognition[0].confidence
-            item.label = recognition[0].title
-            textView.text = item.getTitle()
-        } else {
-            textView.text = getString(R.string.unknown)
+    private fun getCurrentFragment(): Fragment?{
+        //checks if the backstack is empty
+        return if(supportFragmentManager.backStackEntryCount == 0){
+            null
+        }else {
+            //gets the current fragment by subtracting 1 from the back-stack entry count and getting its tag
+            val tag = supportFragmentManager.getBackStackEntryAt(supportFragmentManager.backStackEntryCount -1).name
+            supportFragmentManager.findFragmentByTag(tag)
         }
     }
 
-    private fun resizeToCenter(srcBmp: Bitmap, inputSize: Int): Bitmap{
-        if (srcBmp.width >= srcBmp.height){
+    private fun loadFragment(fragment: FragmentTags){
+        // Creates a transaction for replacing the fragment loaded
+        val transaction = supportFragmentManager.beginTransaction()
+        // Gets the fragment selected
+        val frag = when(fragment){
+            FragmentTags.Sample -> {
+                FragmentSample()
+            }
+            FragmentTags.Upload -> {
+                FragmentUpload()
+            }
+            FragmentTags.List -> {
+                FragmentList()
+            }
+            FragmentTags.About -> {
+                FragmentAbout()
+            }
+        }
 
-            val finalBitmap = Bitmap.createBitmap(
-                srcBmp,
-                srcBmp.width/2 - srcBmp.height/2,
-                0,
-                srcBmp.height,
-                srcBmp.height
-            )
-            return Bitmap.createScaledBitmap(finalBitmap, inputSize, inputSize, false)
+        // Replaces the fragment that is loaded in the fragment container
+        transaction.replace(R.id.fragment_container, frag, fragment.tag)
+        transaction.addToBackStack(fragment.tag)
+        transaction.commit()
+    }
 
+    override fun onBackPressed() {
+        // Closes the navigation drawer if it is open
+        // when the back button is pressed
+        // prevents loading to previous fragment if it is open
+        if(drawer_layout.isDrawerOpen(GravityCompat.START)){
+            drawer_layout.closeDrawer(GravityCompat.START)
         }else{
-
-            val finalBitmap = Bitmap.createBitmap(
-                srcBmp,
-                0,
-                srcBmp.height/2 - srcBmp.width/2,
-                srcBmp.width,
-                srcBmp.width
-            )
-            return Bitmap.createScaledBitmap(finalBitmap, inputSize, inputSize, false)
+            super.onBackPressed()
         }
+    }
+
+    // Enumeration for all fragment tags
+    enum class FragmentTags(val tag: String) {
+        Sample("sample_tag"),
+        Upload("upload_tag"),
+        List("list_tag"),
+        About("about_tag")
     }
 }

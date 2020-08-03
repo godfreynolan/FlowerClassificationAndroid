@@ -3,33 +3,29 @@ package com.riis.flowerclassifier
 import android.graphics.Bitmap
 
 class Utils {
-    companion object{
-        fun resize(image: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap {
-            var temp = image
-            //checks if the maxWidth and height are less than 0
-            return if (maxHeight > 0 && maxWidth > 0) {
-                val width = temp.width
-                val height = temp.height
+    companion object {
+        fun resizeToCenter(srcBmp: Bitmap, inputSize: Int): Bitmap {
+            if (srcBmp.width >= srcBmp.height) {
 
-                //gets the ratio of width to height
-                val ratioBitmap = width.toFloat() / height.toFloat()
-                val ratioMax = maxWidth.toFloat() / maxHeight.toFloat()
+                val finalBitmap = Bitmap.createBitmap(
+                    srcBmp,
+                    srcBmp.width / 2 - srcBmp.height / 2,
+                    0,
+                    srcBmp.height,
+                    srcBmp.height
+                )
+                return Bitmap.createScaledBitmap(finalBitmap, inputSize, inputSize, false)
 
-                //saves the maxWidth and maxHeight for use for the if statement output
-                var finalWidth = maxWidth
-                var finalHeight = maxHeight
-
-                //checks the ratio and determines what width and height to use
-                if (ratioMax > ratioBitmap) {
-                    finalWidth = (maxHeight.toFloat() * ratioBitmap).toInt()
-                } else {
-                    finalHeight = (maxWidth.toFloat() / ratioBitmap).toInt()
-                }
-                //creates the scaled down version for the tflite model
-                temp = Bitmap.createScaledBitmap(temp, maxWidth, maxHeight, false)
-                temp
             } else {
-                image
+
+                val finalBitmap = Bitmap.createBitmap(
+                    srcBmp,
+                    0,
+                    srcBmp.height / 2 - srcBmp.width / 2,
+                    srcBmp.width,
+                    srcBmp.width
+                )
+                return Bitmap.createScaledBitmap(finalBitmap, inputSize, inputSize, false)
             }
         }
     }
